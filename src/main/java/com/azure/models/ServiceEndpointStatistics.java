@@ -2,6 +2,8 @@ package com.azure.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.Map;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceEndpointStatistics {
     private int availableChannels;
@@ -12,6 +14,7 @@ public class ServiceEndpointStatistics {
     private String lastRequestTime;
     private String createdTime;
     private boolean isClosed;
+    private Map<String, String> cerMetrics;
 
     public ServiceEndpointStatistics() {}
 
@@ -45,5 +48,13 @@ public class ServiceEndpointStatistics {
 
     public boolean isClosed() {
         return isClosed;
+    }
+
+    public Map<String, String> getCerMetrics() {
+        return cerMetrics;
+    }
+
+    public void setCerMetrics(Map<String, String> cerMetrics) {
+        this.cerMetrics = cerMetrics;
     }
 }

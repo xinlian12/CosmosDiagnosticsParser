@@ -3,8 +3,8 @@ package com.azure.metricsRecorder;
 import java.io.FileNotFoundException;
 
 public abstract class LatencyMetricsRecorder extends MetricsRecorderBase {
-    public static final int METRICS_PRECISION = 4;
-    public static final int METRICS_MAX_MILLI_SEC = 300000;
+    public static final int METRICS_PRECISION = 1;
+    public static final int METRICS_MAX_MILLI_SEC = Integer.MAX_VALUE;
 
     public LatencyMetricsRecorder(
             String metricsName,

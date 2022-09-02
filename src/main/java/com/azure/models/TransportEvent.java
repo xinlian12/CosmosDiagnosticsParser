@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class TransportEvent {
     private String eventName;
     private String startTimeUTC;
-    private int durationInMicroSec;
+    private Double durationInMilliSecs;
     public TransportEvent() {}
 
     public String getEventName() {
@@ -25,12 +25,12 @@ public class TransportEvent {
         this.startTimeUTC = startTimeUTC;
     }
 
-    public int getDurationInMicroSec() {
-        return durationInMicroSec;
+    public Double getDurationInMilliSecs() {
+        return durationInMilliSecs;
     }
 
-    public void setDurationInMicroSec(int durationInMicroSec) {
-        this.durationInMicroSec = durationInMicroSec;
+    public void setDurationInMilliSecs(Double durationInMilliSecs) {
+        this.durationInMilliSecs = durationInMilliSecs;
     }
 }
 

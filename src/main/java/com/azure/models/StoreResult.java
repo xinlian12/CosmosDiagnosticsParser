@@ -20,7 +20,7 @@ public class StoreResult {
     private long itemLSN;
     private String sessionToken;
     private Double backendLatencyInMs;
-    private String exception;
+    private String exceptionMessage;
     private List<TransportEvent> transportRequestTimeline;
     private int channelTaskQueueSize;
     private ChannelAcquisitionContextEvent transportRequestChannelAcquisitionContext;
@@ -139,12 +139,12 @@ public class StoreResult {
         this.backendLatencyInMs = backendLatencyInMs;
     }
 
-    public String getException() {
-        return exception;
+    public String getExceptionMessage() {
+        return exceptionMessage;
     }
 
-    public void setException(String exception) {
-        this.exception = exception;
+    public void setExceptionMessage(String exceptionMessage) {
+        this.exceptionMessage = exceptionMessage;
     }
 
     public List<TransportEvent> getTransportRequestTimeline() {

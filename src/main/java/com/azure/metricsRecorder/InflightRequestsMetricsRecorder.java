@@ -4,6 +4,8 @@ import com.azure.models.Diagnostics;
 import com.azure.models.StoreResult;
 
 import java.io.FileNotFoundException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class InflightRequestsMetricsRecorder extends MetricsRecorderBase {
     private static final String METRICS_NAME = "inflightRequests";
@@ -15,8 +17,10 @@ public class InflightRequestsMetricsRecorder extends MetricsRecorderBase {
     }
 
     @Override
-    double getRecordValue(Diagnostics diagnostics) {
-        StoreResult storeResult = diagnostics.getResponseStatisticsList().get(0).getStoreResult();
-        return storeResult.getServiceEndpointStatistics().getInflightRequests();
+    List<Double> getRecordValues(Diagnostics diagnostics) {
+        return diagnostics.getResponseStatisticsList()
+                .stream().map(storeResultWrapper ->
+                        Double.valueOf(storeResultWrapper.getStoreResult().getServiceEndpointStatistics().getInflightRequests()))
+                .collect(Collectors.toList());
     }
 }

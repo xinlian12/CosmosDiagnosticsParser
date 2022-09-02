@@ -1,6 +1,5 @@
 package com.azure;
 
-import com.azure.diagnosticsValidator.SingleStoreResultValidator;
 import com.azure.diagnosticsValidator.TransportEventDurationValidator;
 import com.azure.metricsRecorder.BackendLatencyMetricsRecorder;
 import com.azure.metricsRecorder.InflightRequestsMetricsRecorder;
@@ -45,9 +44,8 @@ public class LogParser {
                 TransportTimelineEventName.RECEIVED,
                 TransportTimelineEventName.COMPLETED);
 
-        DiagnosticsHandler diagnosticsParser = new DiagnosticsHandler(Duration.ofMinutes(1));
+        DiagnosticsHandler diagnosticsParser = new DiagnosticsHandler(Duration.ofMinutes(1), latencyResultPrefix);
         try {
-            diagnosticsParser.registerMetricsValidator(new SingleStoreResultValidator());
             diagnosticsParser.registerMetricsValidator(new TransportEventDurationValidator());
 
             diagnosticsParser.registerMetricsRecorder(new RequestLatencyMetricsRecorder(latencyResultPrefix));

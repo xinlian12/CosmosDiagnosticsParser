@@ -18,6 +18,7 @@ public class FileUtils {
     private static final String P95 = "p95";
     private static final String P99 = "p99";
     private static final String P999 = "p999";
+    private static final String P9999 = "p9999";
     private static final String PK_RANGE_ID = "pkRangeId";
     private static final String METRIC_NAME = "metricName";
 
@@ -44,6 +45,8 @@ public class FileUtils {
         sb.append(P99);
         sb.append(',');
         sb.append(P999);
+        sb.append(',');
+        sb.append(P9999);
         sb.append(',');
         sb.append(METRIC_NAME);
         sb.append(',');
@@ -81,6 +84,8 @@ public class FileUtils {
         sb.append(histogram.getValueAtPercentile(99.0));
         sb.append(',');
         sb.append(histogram.getValueAtPercentile(999.0));
+        sb.append(',');
+        sb.append(histogram.getValueAtPercentile(9999.0));
         sb.append(',');
         sb.append(metricsName);
         sb.append(',');

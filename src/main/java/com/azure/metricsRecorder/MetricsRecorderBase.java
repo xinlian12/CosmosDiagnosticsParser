@@ -4,11 +4,11 @@ import com.azure.models.Diagnostics;
 import com.azure.utils.FileUtils;
 import org.HdrHistogram.ConcurrentDoubleHistogram;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,6 +19,7 @@ public abstract class MetricsRecorderBase implements IMetricsRecorder, AutoClose
     private final PrintWriter printWriter;
     private final AtomicInteger integer = new AtomicInteger(0);
     private final ConcurrentHashMap<String, ConcurrentDoubleHistogram> concurrentDoubleHistogramMapByPkRangeId;
+    private final ConcurrentDoubleHistogram concurrentDoubleHistogram;
 
     public MetricsRecorderBase(
             String metricsName,
@@ -29,6 +30,8 @@ public abstract class MetricsRecorderBase implements IMetricsRecorder, AutoClose
         this.metricsPrecision = metricsPrecision;
         this.metricsMaxValue = metricsMax;
         this.concurrentDoubleHistogramMapByPkRangeId = new ConcurrentHashMap<>();
+        this.concurrentDoubleHistogram = new ConcurrentDoubleHistogram(this.metricsMaxValue, this.metricsPrecision);
+
         String logFilePath = logFilePathPrefix + metricsName + ".csv";
 
         this.printWriter = new PrintWriter(logFilePath);
@@ -40,7 +43,7 @@ public abstract class MetricsRecorderBase implements IMetricsRecorder, AutoClose
         return concurrentDoubleHistogramMapByPkRangeId;
     }
 
-    abstract double getRecordValue(Diagnostics diagnostics);
+    abstract List<Double> getRecordValues(Diagnostics diagnostics);
 
     @Override
     public void close() {
@@ -52,35 +55,52 @@ public abstract class MetricsRecorderBase implements IMetricsRecorder, AutoClose
 
     @Override
     public void recordValue(Diagnostics diagnostics) {
-        double recordValue = this.getRecordValue(diagnostics);
+        List<Double> recordValues = this.getRecordValues(diagnostics);
         String pkRangeId = diagnostics.getResponseStatisticsList().get(0).getStoreResult().getPartitionKeyRangeId();
 
-        this.getConcurrentDoubleHistogramMapByPkRangeId().compute(pkRangeId, (key, histogram) -> {
-            if(histogram == null) {
-                histogram = new ConcurrentDoubleHistogram(this.metricsMaxValue, this.metricsPrecision);
-            }
+        try {
+//            this.getConcurrentDoubleHistogramMapByPkRangeId().compute(pkRangeId, (key, histogram) -> {
+//                if(histogram == null) {
+//                    histogram = new ConcurrentDoubleHistogram(this.metricsMaxValue, this.metricsPrecision);
+//                }
+//
+//                for (double recordValue : recordValues) {
+//                    histogram.recordValue(recordValue);
+//                }
+//                return histogram;
+//            });
 
-            histogram.recordValue(recordValue);
-            return histogram;
-        });
+            for (double recordValue : recordValues) {
+                this.concurrentDoubleHistogram.recordValue(recordValue);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
     public void recordHistogramSnapshot(Instant recordTimestamp) {
-        for (String pkRangeId : this.concurrentDoubleHistogramMapByPkRangeId.keySet()) {
+//        for (String pkRangeId : this.concurrentDoubleHistogramMapByPkRangeId.keySet()) {
+//
+//            FileUtils.appendHistogramSnapshot(
+//                    this.concurrentDoubleHistogramMapByPkRangeId.get(pkRangeId),
+//                    Arrays.asList(this.printWriter),
+//                    recordTimestamp,
+//                    this.metricsName,
+//                    pkRangeId
+//            );
+//            this.concurrentDoubleHistogramMapByPkRangeId.get(pkRangeId).reset();
+//        }
 
-            if (this.integer.incrementAndGet() >= 1433) {
-                System.out.println("stop here and check");
-            }
+        FileUtils.appendHistogramSnapshot(
+                this.concurrentDoubleHistogram,
+                Arrays.asList(this.printWriter),
+                recordTimestamp,
+                this.metricsName,
+                "None"
+        );
 
-            FileUtils.appendHistogramSnapshot(
-                    this.concurrentDoubleHistogramMapByPkRangeId.get(pkRangeId),
-                    Arrays.asList(this.printWriter),
-                    recordTimestamp,
-                    this.metricsName,
-                    pkRangeId
-            );
-            this.concurrentDoubleHistogramMapByPkRangeId.get(pkRangeId).reset();
-        }
+        this.concurrentDoubleHistogram.reset();
     }
 }

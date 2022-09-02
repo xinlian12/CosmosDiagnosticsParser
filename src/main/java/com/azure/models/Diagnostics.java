@@ -3,7 +3,9 @@ package com.azure.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Diagnostics {
@@ -16,6 +18,8 @@ public class Diagnostics {
     private String partitionId;
     private String replicaId;
     private String port;
+    private String activityId;
+    private Map<String, AddressResolutionDiagnostics> addressResolutionStatistics;
 
     @JsonIgnore
     private String logLine;
@@ -23,12 +27,19 @@ public class Diagnostics {
     public Diagnostics() {
     }
 
-    public Diagnostics(String userAgent, int requestLatencyInMs, String requestStartTimeUTC, String requestEndTimeUTC, List<StoreResultWrapper> responseStatisticsList) {
+    public Diagnostics(
+            String userAgent,
+            int requestLatencyInMs,
+            String requestStartTimeUTC,
+            String requestEndTimeUTC,
+            List<StoreResultWrapper> responseStatisticsList,
+            Map<String, AddressResolutionDiagnostics> addressResolutionStatistics) {
         this.userAgent = userAgent;
         this.requestLatencyInMs = requestLatencyInMs;
         this.requestStartTimeUTC = requestStartTimeUTC;
         this.requestEndTimeUTC = requestEndTimeUTC;
         this.responseStatisticsList = responseStatisticsList;
+        this.addressResolutionStatistics = addressResolutionStatistics;
     }
 
     public String getUserAgent() {
@@ -101,6 +112,22 @@ public class Diagnostics {
 
     public void setPort(String port) {
         this.port = port;
+    }
+
+    public Map<String, AddressResolutionDiagnostics> getAddressResolutionStatistics() {
+        return addressResolutionStatistics;
+    }
+
+    public void setAddressResolutionStatistics(Map<String, AddressResolutionDiagnostics> addressResolutionStatistics) {
+        this.addressResolutionStatistics = addressResolutionStatistics;
+    }
+
+    public String getActivityId() {
+        return activityId;
+    }
+
+    public void setActivityId(String activityId) {
+        this.activityId = activityId;
     }
 
     @JsonIgnore
