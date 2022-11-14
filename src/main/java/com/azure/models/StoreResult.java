@@ -21,10 +21,12 @@ public class StoreResult {
     private String sessionToken;
     private Double backendLatencyInMs;
     private String exceptionMessage;
+    private String exceptionResponseHeaders;
     private List<TransportEvent> transportRequestTimeline;
     private int channelTaskQueueSize;
     private ChannelAcquisitionContextEvent transportRequestChannelAcquisitionContext;
     private ServiceEndpointStatistics serviceEndpointStatistics;
+    private List<String> replicaStatusList;
 
     public StoreResult() {}
     public String getStorePhysicalAddress() {
@@ -173,6 +175,22 @@ public class StoreResult {
 
     public ServiceEndpointStatistics getServiceEndpointStatistics() {
         return serviceEndpointStatistics;
+    }
+
+    public List<String> getReplicaStatusList() {
+        return replicaStatusList;
+    }
+
+    public void setReplicaStatusList(List<String> replicaStatusList) {
+        this.replicaStatusList = replicaStatusList;
+    }
+
+    public String getExceptionResponseHeaders() {
+        return exceptionResponseHeaders;
+    }
+
+    public void setExceptionResponseHeaders(String exceptionResponseHeaders) {
+        this.exceptionResponseHeaders = exceptionResponseHeaders;
     }
 }
 

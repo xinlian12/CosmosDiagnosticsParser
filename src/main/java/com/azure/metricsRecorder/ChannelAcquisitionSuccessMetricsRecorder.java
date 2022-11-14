@@ -1,11 +1,14 @@
 package com.azure.metricsRecorder;
 
+import com.azure.ISummaryRecorder;
+import com.azure.metricsRecorder.latency.LatencyMetricsRecorder;
 import com.azure.models.Diagnostics;
 import com.azure.models.StoreResult;
 import com.azure.models.TransportTimelineEventName;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,7 +20,7 @@ public class ChannelAcquisitionSuccessMetricsRecorder extends LatencyMetricsReco
     }
 
     @Override
-    List<Double> getRecordValues(Diagnostics diagnostics) {
+    public List<Double> getRecordValues(Diagnostics diagnostics) {
 
         return diagnostics
                 .getResponseStatisticsList()
@@ -41,5 +44,10 @@ public class ChannelAcquisitionSuccessMetricsRecorder extends LatencyMetricsReco
                 .findFirst()
                 .get()
                 .getDurationInMilliSecs();
+    }
+
+    @Override
+    public void reportStatistics(ISummaryRecorder summaryRecorder) {
+
     }
 }

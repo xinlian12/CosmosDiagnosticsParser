@@ -20,6 +20,8 @@ public class Diagnostics {
     private String port;
     private String activityId;
     private Map<String, AddressResolutionDiagnostics> addressResolutionStatistics;
+    private Map<String, List<MetadataDiagnostic>> metadataDiagnosticsContext;
+    private RetryContext retryContext;
 
     @JsonIgnore
     private String logLine;
@@ -138,5 +140,21 @@ public class Diagnostics {
     @JsonIgnore
     public void setLogLine(String logLine) {
         this.logLine = logLine;
+    }
+
+    public Map<String, List<MetadataDiagnostic>> getMetadataDiagnosticsContext() {
+        return metadataDiagnosticsContext;
+    }
+
+    public void setMetadataDiagnosticsContext(Map<String, List<MetadataDiagnostic>> metadataDiagnosticsContext) {
+        this.metadataDiagnosticsContext = metadataDiagnosticsContext;
+    }
+
+    public RetryContext getRetryContext() {
+        return retryContext;
+    }
+
+    public void setRetryContext(RetryContext retryContext) {
+        this.retryContext = retryContext;
     }
 }

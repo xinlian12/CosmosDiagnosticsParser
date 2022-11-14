@@ -1,5 +1,7 @@
 package com.azure.metricsRecorder;
 
+import com.azure.ISummaryRecorder;
+import com.azure.common.DiagnosticsHelper;
 import com.azure.models.ActionTimeline;
 import com.azure.models.AddressResolutionDiagnostics;
 import com.azure.models.Diagnostics;
@@ -23,11 +25,18 @@ import java.util.stream.Collectors;
 public class SimpleTimelineAnalysisRecorder implements IMetricsRecorder {
     private final ConcurrentHashMap<String, List<ActionTimeline>> actionTimelineHashMap;
     private final String logPrefix;
+    private final String serverFilter;
 
     public SimpleTimelineAnalysisRecorder(String logPrefix) throws FileNotFoundException {
+        this(logPrefix, null);
+    }
+
+    public SimpleTimelineAnalysisRecorder(String logPrefix, String serverFilter) throws FileNotFoundException {
         this.actionTimelineHashMap = new ConcurrentHashMap<String, List<ActionTimeline>>();
         this.logPrefix = logPrefix;
+        this.serverFilter = serverFilter;
     }
+
 
     @Override
     public void recordValue(Diagnostics diagnostics) {
@@ -38,18 +47,25 @@ public class SimpleTimelineAnalysisRecorder implements IMetricsRecorder {
                 .getStoreResult()
                 .getPartitionKeyRangeId();
 
-        if (StringUtils.isEmpty(partitionKeyRangeId)) {
-            return;
-        }
-
-        List<ActionTimeline> eventsByPkRangeId = this.actionTimelineHashMap.compute(partitionKeyRangeId, (key, actions) -> {
-            if (actions == null) {
-                actions = new ArrayList<>();
-            }
-            return actions;
-        });
-
         for (StoreResultWrapper storeResultWrapper : diagnostics.getResponseStatisticsList()) {
+            String serverKey = DiagnosticsHelper.getServerKey(storeResultWrapper);
+
+            if (StringUtils.isEmpty(serverKey)) {
+                continue;
+            }
+
+            if (StringUtils.isNotEmpty(this.serverFilter) &&
+                    !storeResultWrapper.getStoreResult().getStorePhysicalAddress().contains(this.serverFilter)) {
+                continue;
+            }
+
+            List<ActionTimeline> eventsByServerKey = this.actionTimelineHashMap.compute(serverKey, (key, actions) -> {
+                if (actions == null) {
+                    actions = new ArrayList<>();
+                }
+                return actions;
+            });
+
             ExceptionCategory exceptionCategory = this.parseExceptionCategory(storeResultWrapper);
 
             String requestStartTime = storeResultWrapper.getStoreResult().getTransportRequestTimeline()
@@ -64,14 +80,16 @@ public class SimpleTimelineAnalysisRecorder implements IMetricsRecorder {
                     .get()
                     .getStartTimeUTC();
 
-            eventsByPkRangeId.add(
+            eventsByServerKey.add(
                     ActionTimeline.createNewRequestActionTimeline(
                             requestStartTime,
                             requestEndTime,
                             Arrays.asList(
                                     Duration.between(Instant.parse(requestStartTime), Instant.parse(requestEndTime)).toMillis(),
                                     diagnostics.getActivityId(),
-                                    storeResultWrapper.getStoreResult().getStatusCode() + ":" + storeResultWrapper.getStoreResult().getSubStatusCode()),
+                                    storeResultWrapper.getStoreResult().getStatusCode() + ":" + storeResultWrapper.getStoreResult().getSubStatusCode(),
+                                    "pkRangeId:" + partitionKeyRangeId,
+                                    diagnostics.getLogLine()),
                             exceptionCategory,
                             diagnostics.getLogLine()));
 
@@ -84,34 +102,35 @@ public class SimpleTimelineAnalysisRecorder implements IMetricsRecorder {
                     String lastUpdatedAddresses = lastActionContext.split(",")[1];
                     String lastUpdateAddressesCount = lastUpdatedAddresses.substring(0, lastUpdatedAddresses.length()-1);
                     if (Integer.parseInt(lastUpdateAddressesCount) > 0) {
-                        eventsByPkRangeId.add(
+                        eventsByServerKey.add(
                                 ActionTimeline.createConnectionStateListenerActTimeline(
                                         lastActionContextTimestamp,
                                         lastActionContextTimestamp,
-                                        Arrays.asList(lastUpdateAddressesCount),
+                                        Arrays.asList(lastUpdateAddressesCount, diagnostics.getLogLine()),
                                         diagnostics.getLogLine()));
                     }
                 }
             }
         }
 
-        if (diagnostics.getAddressResolutionStatistics() != null) {
-            for (String activityId : diagnostics.getAddressResolutionStatistics().keySet()) {
-                AddressResolutionDiagnostics addressResolutionDiagnostics = diagnostics.getAddressResolutionStatistics().get(activityId);
-                addressResolutionDiagnostics.setActivityId(activityId);
-                eventsByPkRangeId.add(
-                        ActionTimeline.createAddressRefreshTimeline(
-                                addressResolutionDiagnostics.getStartTimeUTC(),
-                                addressResolutionDiagnostics.getEndTimeUTC(),
-                                Arrays.asList(
-                                        addressResolutionDiagnostics.isForceRefresh(),
-                                        addressResolutionDiagnostics.isForceCollectionRoutingMapRefresh(),
-                                        addressResolutionDiagnostics.isInflightRequest(),
-                                        diagnostics.getActivityId()),
-                                diagnostics.getLogLine()
-                        ));
-            }
-        }
+//        if (diagnostics.getAddressResolutionStatistics() != null) {
+//            for (String activityId : diagnostics.getAddressResolutionStatistics().keySet()) {
+//                AddressResolutionDiagnostics addressResolutionDiagnostics = diagnostics.getAddressResolutionStatistics().get(activityId);
+//                addressResolutionDiagnostics.setActivityId(activityId);
+//                eventsByServerKey.add(
+//                        ActionTimeline.createAddressRefreshTimeline(
+//                                addressResolutionDiagnostics.getStartTimeUTC(),
+//                                addressResolutionDiagnostics.getEndTimeUTC(),
+//                                Arrays.asList(
+//                                        addressResolutionDiagnostics.isForceRefresh(),
+//                                        addressResolutionDiagnostics.isForceCollectionRoutingMapRefresh(),
+//                                        addressResolutionDiagnostics.isInflightRequest(),
+//                                        diagnostics.getActivityId(),
+//                                        diagnostics.getLogLine()),
+//                                diagnostics.getLogLine()
+//                        ));
+//            }
+//        }
 
     }
 
@@ -129,7 +148,7 @@ public class SimpleTimelineAnalysisRecorder implements IMetricsRecorder {
                             .getStoreResult()
                             .getTransportRequestTimeline()
                             .stream()
-                            .filter(transportEvent -> transportEvent.getEventName().equals(TransportTimelineEventName.DECODE.getDescription()))
+                            .filter(transportEvent -> transportEvent.getEventName().equals(TransportTimelineEventName.RECEIVED.getDescription()))
                             .findFirst()
                             .get()
                             .getStartTimeUTC() == null) {
@@ -155,9 +174,15 @@ public class SimpleTimelineAnalysisRecorder implements IMetricsRecorder {
     }
 
     @Override
+    public void reportStatistics(ISummaryRecorder summaryRecorder) {
+
+    }
+
+
+    @Override
     public void close() throws Exception {
-        for (String partitionKeyRangeId : Collections.list(this.actionTimelineHashMap.keys())) {
-            List<ActionTimeline> actionsByPartition = this.actionTimelineHashMap.get(partitionKeyRangeId)
+        for (String serverKey : Collections.list(this.actionTimelineHashMap.keys())) {
+            List<ActionTimeline> actionsByPartition = this.actionTimelineHashMap.get(serverKey)
                     .stream().sorted(new Comparator<ActionTimeline>() {
                         @Override
                         public int compare(ActionTimeline o1, ActionTimeline o2) {
@@ -165,17 +190,16 @@ public class SimpleTimelineAnalysisRecorder implements IMetricsRecorder {
                         }
                     }).collect(Collectors.toList());
 
-            String fileName = this.logPrefix + "timeline/" + partitionKeyRangeId + "_timeline.log";
+            String fileName = this.logPrefix + serverKey + "_timeline.log";
             try(PrintWriter printWriter  = new PrintWriter(fileName)) {
                 for (ActionTimeline actionTimeline : actionsByPartition) {
-                    printWriter.write(
+                    printWriter.println(
                             String.format(
                                     "%s|%s|%s|%s",
                                     actionTimeline.getEventName(),
                                     actionTimeline.getStartTime(),
                                     actionTimeline.getEndTime(),
                                     actionTimeline.getDetails()));
-                    printWriter.write("\n");
                 }
                 printWriter.flush();
             }

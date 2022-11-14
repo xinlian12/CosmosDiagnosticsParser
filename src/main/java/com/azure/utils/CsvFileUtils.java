@@ -6,7 +6,7 @@ import java.io.PrintWriter;
 import java.time.Instant;
 import java.util.List;
 
-public class FileUtils {
+public class CsvFileUtils {
     private static final String TIME = "t";
     private static final String COUNT = "count";
     private static final String MAX = "max";

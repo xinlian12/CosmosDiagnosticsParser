@@ -1,4 +1,6 @@
-package com.azure.metricsRecorder;
+package com.azure.metricsRecorder.latency;
+
+import com.azure.metricsRecorder.MetricsRecorderBase;
 
 import java.io.FileNotFoundException;
 

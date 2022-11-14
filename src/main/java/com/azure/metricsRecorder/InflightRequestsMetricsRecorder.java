@@ -1,9 +1,11 @@
 package com.azure.metricsRecorder;
 
+import com.azure.ISummaryRecorder;
 import com.azure.models.Diagnostics;
 import com.azure.models.StoreResult;
 
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,10 +19,15 @@ public class InflightRequestsMetricsRecorder extends MetricsRecorderBase {
     }
 
     @Override
-    List<Double> getRecordValues(Diagnostics diagnostics) {
+    public List<Double> getRecordValues(Diagnostics diagnostics) {
         return diagnostics.getResponseStatisticsList()
                 .stream().map(storeResultWrapper ->
                         Double.valueOf(storeResultWrapper.getStoreResult().getServiceEndpointStatistics().getInflightRequests()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void reportStatistics(ISummaryRecorder summaryRecorder) {
+
     }
 }

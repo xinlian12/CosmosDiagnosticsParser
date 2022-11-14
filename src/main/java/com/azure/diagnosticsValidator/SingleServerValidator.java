@@ -2,6 +2,8 @@ package com.azure.diagnosticsValidator;
 
 import com.azure.models.Diagnostics;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class SingleServerValidator implements IDiagnosticsValidator{
     private final String serverKey;
 

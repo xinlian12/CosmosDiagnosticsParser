@@ -3,16 +3,18 @@ package com.azure;
 import com.azure.diagnosticsValidator.IDiagnosticsValidator;
 import com.azure.metricsRecorder.IMetricsRecorder;
 import com.azure.models.Diagnostics;
+import com.azure.models.RequestEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
@@ -26,13 +28,16 @@ public class DiagnosticsHandler implements AutoCloseable {
     private Instant recordTimestamp;
     private final List<Diagnostics> validDiagnostics = new ArrayList<>();
     private final String logPrefix;
+    private final SummaryRecorder summaryRecorder;
+    private int maxConcurrency = Integer.MIN_VALUE;
 
-    public DiagnosticsHandler(Duration recordInterval, String logPrefix) {
+    public DiagnosticsHandler(Duration recordInterval, String logPrefix, SummaryRecorder summaryRecorder) {
         this.recordIntervalInMillis = recordInterval.toMillis();
         this.metricsRecorderList = new ArrayList<>();
         this.diagnosticsValidatorList = new ArrayList<>();
         this.recordTimestamp = null;
         this.logPrefix = logPrefix;
+        this.summaryRecorder = summaryRecorder;
     }
 
     public void registerMetricsRecorder(IMetricsRecorder metricsRecorder) {
@@ -90,9 +95,21 @@ public class DiagnosticsHandler implements AutoCloseable {
                 })
                 .collect(Collectors.toList());
 
+        int loggedLines = 0;
+        List<RequestEvent> requestEvents = new ArrayList<>();
         for (Diagnostics diagnostics : orderedDiagnostics) {
+            this.summaryRecorder.startNewDiagnostics(diagnostics);
+//            if (loggedLines < 30) {
+//                System.out.println(diagnostics.getLogLine());
+//            }
+//            loggedLines++;
+            requestEvents.add(RequestEvent.createRequestStartEvent(diagnostics.getRequestStartTimeUTC(), diagnostics.getActivityId()));
+            requestEvents.add(RequestEvent.createRequestEndEvent(diagnostics.getRequestEndTimeUTC(), diagnostics.getActivityId()));
+
             this.processDiagnosticsInternal(diagnostics);
         }
+
+        this.summaryRecorder.startNewDiagnostics(null);
 
 //        String fileName = logPrefix + "diagnostics.log";
 //        try (PrintWriter printWriter = new PrintWriter(fileName)) {
@@ -107,8 +124,61 @@ public class DiagnosticsHandler implements AutoCloseable {
 //        }
 
         // flush any left data
-        for (IMetricsRecorder metricsRecorder : metricsRecorderList) {
-            metricsRecorder.recordHistogramSnapshot(this.recordTimestamp);
+        if (orderedDiagnostics.size() > 0) {
+            for (IMetricsRecorder metricsRecorder : metricsRecorderList) {
+                metricsRecorder.recordHistogramSnapshot(this.recordTimestamp);
+                metricsRecorder.reportStatistics(summaryRecorder);
+            }
+        }
+        summaryRecorder.getPrintWriter().flush();
+        this.parseConcurrency(requestEvents);
+
+        System.out.println("Max concurrency is: " + this.maxConcurrency);
+    }
+
+    private void parseConcurrency(List<RequestEvent> requestEvents) {
+        // analysis concurrency
+        Collections.sort(requestEvents, new Comparator<RequestEvent>() {
+            @Override
+            public int compare(RequestEvent o1, RequestEvent o2) {
+                return Instant.parse(o1.getTimestamp()).compareTo(Instant.parse(o2.getTimestamp()));
+            }
+        });
+
+        int recordIntervalInMillis = 1000;
+        Set<String> requests = new HashSet<>();
+        Instant eventTimestamp = null;
+
+        for (RequestEvent requestEvent : requestEvents) {
+            if (eventTimestamp == null) {
+                eventTimestamp = Instant.parse(requestEvents.get(0).getTimestamp()).plusMillis(recordIntervalInMillis);
+            }
+
+            if (Instant.parse(requestEvent.getTimestamp()).isBefore(eventTimestamp.plusMillis(recordIntervalInMillis))) {
+                if (requestEvent.getRequestType() == RequestEvent.RequestType.START) {
+                    requests.add(requestEvent.getActivityId());
+                } else {
+                    requests.remove(requestEvent.getActivityId());
+                }
+
+                if (this.maxConcurrency < requests.size()) {
+                    this.maxConcurrency = requests.size();
+                }
+            } else {
+               // System.out.println("Concurrency: " + requests.size());
+
+                // reset the recording
+                eventTimestamp = eventTimestamp.plusMillis(recordIntervalInMillis);
+                if (requestEvent.getRequestType() == RequestEvent.RequestType.START) {
+                    requests.add(requestEvent.getActivityId());
+                } else {
+                    requests.remove(requestEvent.getActivityId());
+                }
+
+                if (this.maxConcurrency < requests.size()) {
+                    this.maxConcurrency = requests.size();
+                }
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 package com.azure.metricsRecorder;
 
+import com.azure.ISummaryRecorder;
 import com.azure.models.ActionTimeline;
 import com.azure.models.AddressResolutionDiagnostics;
 import com.azure.models.Diagnostics;
@@ -153,6 +154,11 @@ public class TimelineAnalysisRecorder implements IMetricsRecorder{
     @Override
     public void recordHistogramSnapshot(Instant recordTimestamp) {
         // no-op
+    }
+
+    @Override
+    public void reportStatistics(ISummaryRecorder summaryRecorder) {
+
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.azure.metricsRecorder;
 
 import com.azure.models.Diagnostics;
-import com.azure.utils.FileUtils;
+import com.azure.utils.CsvFileUtils;
 import org.HdrHistogram.ConcurrentDoubleHistogram;
 
 import java.io.FileNotFoundException;
@@ -36,14 +36,14 @@ public abstract class MetricsRecorderBase implements IMetricsRecorder, AutoClose
 
         this.printWriter = new PrintWriter(logFilePath);
 
-        FileUtils.appendSimpleCsvFileHeader(this.printWriter);
+        CsvFileUtils.appendSimpleCsvFileHeader(this.printWriter);
     }
 
     public ConcurrentHashMap<String, ConcurrentDoubleHistogram> getConcurrentDoubleHistogramMapByPkRangeId() {
         return concurrentDoubleHistogramMapByPkRangeId;
     }
 
-    abstract List<Double> getRecordValues(Diagnostics diagnostics);
+    public abstract List<Double> getRecordValues(Diagnostics diagnostics);
 
     @Override
     public void close() {
@@ -93,7 +93,7 @@ public abstract class MetricsRecorderBase implements IMetricsRecorder, AutoClose
 //            this.concurrentDoubleHistogramMapByPkRangeId.get(pkRangeId).reset();
 //        }
 
-        FileUtils.appendHistogramSnapshot(
+        CsvFileUtils.appendHistogramSnapshot(
                 this.concurrentDoubleHistogram,
                 Arrays.asList(this.printWriter),
                 recordTimestamp,

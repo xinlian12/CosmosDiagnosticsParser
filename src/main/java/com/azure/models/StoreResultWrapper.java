@@ -6,6 +6,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class StoreResultWrapper {
     private StoreResult storeResult;
 
+    public StoreResultWrapper() {}
+    public StoreResultWrapper(StoreResult storeResult) {
+        this.storeResult = storeResult;
+    }
+
     public StoreResult getStoreResult() {
         return storeResult;
     }

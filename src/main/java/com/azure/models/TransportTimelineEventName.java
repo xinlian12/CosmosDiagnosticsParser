@@ -9,7 +9,6 @@ public enum TransportTimelineEventName {
     DECODE("decodeTime"),
     RECEIVED("received"),
     COMPLETED("completed");
-
     private final String description;
 
     TransportTimelineEventName(String description) {
