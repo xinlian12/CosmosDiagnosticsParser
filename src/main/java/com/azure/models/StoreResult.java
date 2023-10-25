@@ -26,6 +26,7 @@ public class StoreResult {
     private int channelTaskQueueSize;
     private ChannelAcquisitionContextEvent transportRequestChannelAcquisitionContext;
     private ServiceEndpointStatistics serviceEndpointStatistics;
+    private ChannelStatistics channelStatistics;
     private List<String> replicaStatusList;
 
     public StoreResult() {}
@@ -175,6 +176,10 @@ public class StoreResult {
 
     public ServiceEndpointStatistics getServiceEndpointStatistics() {
         return serviceEndpointStatistics;
+    }
+
+    public ChannelStatistics getChannelStatistics() {
+        return this.channelStatistics;
     }
 
     public List<String> getReplicaStatusList() {

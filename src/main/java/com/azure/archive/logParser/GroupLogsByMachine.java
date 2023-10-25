@@ -58,7 +58,7 @@ public class GroupLogsByMachine {
                 e.printStackTrace();
             }
 
-            System.out.println("Valid lines: " + validLines);
+          //  System.out.println("Valid lines: " + validLines);
         }
 
     }

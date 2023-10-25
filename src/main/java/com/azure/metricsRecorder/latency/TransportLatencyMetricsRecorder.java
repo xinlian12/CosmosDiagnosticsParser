@@ -68,7 +68,16 @@ public class TransportLatencyMetricsRecorder extends LatencyMetricsRecorder {
             this.summaryRecorder.recordChannelAcquisition(totalLatency);
         }
         if (this.eventName == TransportTimelineEventName.TRANSIT) {
-            this.summaryRecorder.recordTransitLatency(totalLatency);
+
+            // calcualte backendLatency time
+            double backendLatency = diagnostics.getResponseStatisticsList()
+                    .stream().map(storeResultWrapper -> {
+                        return storeResultWrapper.getStoreResult().getBackendLatencyInMs() == null ? 0 : storeResultWrapper.getStoreResult().getBackendLatencyInMs();
+                    })
+                    .reduce((x, y) -> x + y)
+                    .get();
+
+            this.summaryRecorder.recordTransitLatency(totalLatency - backendLatency);
         }
 
         return latencies;

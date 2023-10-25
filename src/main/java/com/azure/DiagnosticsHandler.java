@@ -14,7 +14,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
@@ -30,6 +32,7 @@ public class DiagnosticsHandler implements AutoCloseable {
     private final String logPrefix;
     private final SummaryRecorder summaryRecorder;
     private int maxConcurrency = Integer.MIN_VALUE;
+    private Map<String, Integer> maxConcurrencyByMachine = new ConcurrentHashMap<>();
 
     public DiagnosticsHandler(Duration recordInterval, String logPrefix, SummaryRecorder summaryRecorder) {
         this.recordIntervalInMillis = recordInterval.toMillis();

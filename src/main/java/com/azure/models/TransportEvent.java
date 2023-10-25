@@ -7,6 +7,8 @@ public class TransportEvent {
     private String eventName;
     private String startTimeUTC;
     private Double durationInMilliSecs;
+
+    private Double durationInMicroSec;
     public TransportEvent() {}
 
     public String getEventName() {
@@ -26,11 +28,24 @@ public class TransportEvent {
     }
 
     public Double getDurationInMilliSecs() {
-        return durationInMilliSecs;
+        if (this.durationInMilliSecs != null) {
+            return this.durationInMilliSecs;
+        }
+
+        return this.durationInMicroSec;
     }
 
     public void setDurationInMilliSecs(Double durationInMilliSecs) {
         this.durationInMilliSecs = durationInMilliSecs;
+    }
+
+    public Double getDurationInMicroSec() {
+        return durationInMicroSec;
+    }
+
+    public void setDurationInMicroSec(Double durationInMicroSec) {
+        this.durationInMicroSec = durationInMicroSec;
+        this.durationInMilliSecs = durationInMicroSec / 1000;
     }
 }
 

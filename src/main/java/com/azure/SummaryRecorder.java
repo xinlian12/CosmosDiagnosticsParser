@@ -1,11 +1,11 @@
 package com.azure;
 
 import com.azure.common.DiagnosticsHelper;
-import com.azure.cosmos.implementation.Utils;
 import com.azure.models.Diagnostics;
 import com.azure.models.ExceptionCategory;
 import com.azure.models.StoreResultWrapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -14,8 +14,11 @@ import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URI;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -38,6 +41,7 @@ public class SummaryRecorder implements ISummaryRecorder{
     private ConcurrentHashMap<String, PartitionRecorder> partitionRecorderMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, ServerLogRecorder> serverLogRecorderMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Integer> latencyCategoryMap = new ConcurrentHashMap<>();
+    private Set<String> highTransientTimeEndpoints = new HashSet<>();
     private ConcurrentHashMap<String, Integer> errorByServer = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Integer> connectionTimeoutOnUnknown = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Integer> connectionTimeoutOnConnected = new ConcurrentHashMap<>();
@@ -174,7 +178,7 @@ public class SummaryRecorder implements ISummaryRecorder{
             });
 
             try {
-                serverLogRecorder.recordServerLog(Utils.getSimpleObjectMapper().writeValueAsString(storeResultWrapper.getStoreResult()));
+                serverLogRecorder.recordServerLog(new ObjectMapper().writeValueAsString(storeResultWrapper.getStoreResult()));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
@@ -241,7 +245,12 @@ public class SummaryRecorder implements ISummaryRecorder{
             if (requestLatency > this.currentHighLatencyValue * 2) {
                 //switch category
                 this.currentHighLatencyCategory = OTHERS;
+               // System.out.println("Others:" + this.currentHighLatencyDiagnostics.getLogLine());;
             }
+
+//            if (this.currentHighLatencyCategory == HIGH_BACKEND_LATENCY) {
+//                System.out.println("High backend latency: " + this.currentHighLatencyDiagnostics.getLogLine());
+//            }
 
             this.latencyCategoryMap.compute(this.currentHighLatencyCategory, (category, count) -> {
                 if (count == null) {
@@ -252,6 +261,14 @@ public class SummaryRecorder implements ISummaryRecorder{
                 return count;
             });
         }
+
+        if (this.currentHighLatencyCategory == HIGH_TRANSIT_TIME) {
+            this.highTransientTimeEndpoints.add(
+                    DiagnosticsHelper.getServerKey(this.currentHighLatencyDiagnostics.getResponseStatisticsList().get(0)));
+        }
+//        if (this.currentHighLatencyCategory == HIGH_TRANSIT_TIME) {
+//            System.out.println("High transit time:" + this.currentHighLatencyDiagnostics.getLogLine());
+//        }
 
         this.currentHighLatencyCategory = null;
         this.currentHighLatencyValue = Double.MIN_VALUE;
@@ -385,6 +402,11 @@ public class SummaryRecorder implements ISummaryRecorder{
     @Override
     public ConcurrentHashMap<String, Integer> getHighLatencyMap() {
         return this.latencyCategoryMap;
+    }
+
+    @Override
+    public Set<String> getHighTransientTimeEndpoints() {
+        return this.highTransientTimeEndpoints;
     }
 
     @Override

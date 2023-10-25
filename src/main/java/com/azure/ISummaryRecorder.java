@@ -5,6 +5,7 @@ import com.azure.models.ExceptionCategory;
 
 import java.io.PrintWriter;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -58,6 +59,7 @@ public interface ISummaryRecorder {
     ConcurrentHashMap<String, Integer> getConnectionTimeoutOnOthers();
 
     ConcurrentHashMap<String, Integer> getHighLatencyMap();
+    Set<String> getHighTransientTimeEndpoints();
 
     void close();
     void clearServerLogFolder();

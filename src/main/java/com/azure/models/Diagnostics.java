@@ -3,7 +3,6 @@ package com.azure.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +21,8 @@ public class Diagnostics {
     private Map<String, AddressResolutionDiagnostics> addressResolutionStatistics;
     private Map<String, List<MetadataDiagnostic>> metadataDiagnosticsContext;
     private RetryContext retryContext;
+    private ClientConfigurations clientCfgs;
+    private SystemInformation systemInformation;
 
     @JsonIgnore
     private String logLine;
@@ -156,5 +157,21 @@ public class Diagnostics {
 
     public void setRetryContext(RetryContext retryContext) {
         this.retryContext = retryContext;
+    }
+
+    public ClientConfigurations getClientCfgs() {
+        return clientCfgs;
+    }
+
+    public void setClientCfgs(ClientConfigurations clientCfgs) {
+        this.clientCfgs = clientCfgs;
+    }
+
+    public SystemInformation getSystemInformation() {
+        return systemInformation;
+    }
+
+    public void setSystemInformation(SystemInformation systemInformation) {
+        this.systemInformation = systemInformation;
     }
 }

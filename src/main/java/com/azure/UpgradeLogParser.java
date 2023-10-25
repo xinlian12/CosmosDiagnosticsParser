@@ -11,6 +11,7 @@ import com.azure.metricsRecorder.latency.AddressResolutionMetricsRecorder;
 import com.azure.metricsRecorder.latency.BackendLatencyMetricsRecorder;
 import com.azure.metricsRecorder.latency.RequestLatencyMetricsRecorder;
 import com.azure.metricsRecorder.latency.TransportLatencyMetricsRecorder;
+import com.azure.models.CosmosDiagnosticsException;
 import com.azure.models.Diagnostics;
 import com.azure.models.StoreResultWrapper;
 import com.azure.models.TransportTimelineEventName;
@@ -43,12 +44,15 @@ public class UpgradeLogParser {
 
     public static void main(String[] args) throws Exception {
         String matchingString = ".*WARN  site.ycsb.db.AzureCosmosClient \\[\\] -(.*)";
+      //  String errorMatchString = "com.azure.cosmos.implementation.ServiceUnavailableException: (.*)";
         Pattern pattern = Pattern.compile(matchingString, Pattern.CASE_INSENSITIVE);
 
         // Decide how many machines you want to analysis
         for (int i = 1; i <= 1; i++) {
-            String logSourceDirectory = String.format("src/main/java/upgrades/LowPartition-167/VM%s/cosmos_client_logs/diagnostics/create", i);
-            String latencyResultPrefix = String.format("src/main/java/upgrades/parsingResult/vm%d/", i);
+            String logSourceDirectory = "src/main/java/upgrades/Read-vm1-system-diagnostics/cosmos_client_logs/cosmos_diagnostics/read";
+            // String logSourceDirectory = "src/main/java/BenchmarkTests/ycsbbenchmarking-2023-02-08-16h37m47s-DirectRead/DirectRead-vm1-system-diagnostics/cosmos_diagnostics/read";
+            //String logSourceDirectory = String.format("src/main/java/BenchmarkTests/ycsbbenchmarking-2023-02-08-16h37m47s-DirectRead/DirectRead-vm1-system-diagnostics/cosmos_exceptions/read", i);
+            String latencyResultPrefix = String.format("src/main/java/upgrades/parsingresult", i);
             System.out.println("Parsing log from directory: " + logSourceDirectory);
 
             File latencyResultDirectory = new File(latencyResultPrefix);
@@ -83,12 +87,12 @@ public class UpgradeLogParser {
                 try {
                     String serverFilter = "rntbd://cdb-ms-prod-northcentralus1-be12.documents.azure.com:14072";
                     diagnosticsParser.registerMetricsValidator(new TransportEventDurationValidator());
-                    diagnosticsParser.registerMetricsValidator(new ExceptionsValidator());
+                   // diagnosticsParser.registerMetricsValidator(new ExceptionsValidator());
                   //  diagnosticsParser.registerMetricsValidator(new SingleServerValidator(serverFilter));
                   //  diagnosticsParser.registerMetricsValidator(new SinglePartitionMetricsValidator("1470"));
-                    diagnosticsParser.registerMetricsValidator(new RequestLatencyValidator(5000, 300000));
+                    diagnosticsParser.registerMetricsValidator(new RequestLatencyValidator(2000, 300000));
                     diagnosticsParser.registerMetricsRecorder(new RequestLatencyMetricsRecorder(latencyResultFullPrefix));
-                    diagnosticsParser.registerMetricsRecorder(new BackendLatencyMetricsRecorder(latencyResultFullPrefix, summaryRecorder));
+                   // diagnosticsParser.registerMetricsRecorder(new BackendLatencyMetricsRecorder(latencyResultFullPrefix, summaryRecorder));
                     diagnosticsParser.registerMetricsRecorder(new AddressResolutionMetricsRecorder(latencyResultFullPrefix, summaryRecorder));
                    // diagnosticsParser.registerMetricsRecorder(new BackoffLatency429MetricsRecorder(latencyResultFullPrefix, summaryRecorder));
                    // diagnosticsParser.registerMetricsRecorder(new BackoffLatency410ByRetryContextMetricsRecorder(latencyResultFullPrefix, summaryRecorder));
@@ -100,7 +104,7 @@ public class UpgradeLogParser {
 
                    // diagnosticsParser.registerMetricsRecorder(new Retry410MetricsRecorder(latencyResultFullPrefix));
                     diagnosticsParser.registerMetricsRecorder(new ExceptionMetricsRecorder(latencyResultFullPrefix));
-                   // diagnosticsParser.registerMetricsRecorder(new SimpleTimelineAnalysisRecorder(latencyResultFullPrefix));
+                    diagnosticsParser.registerMetricsRecorder(new SimpleTimelineAnalysisRecorder(latencyResultFullPrefix));
                   //  diagnosticsParser.registerMetricsRecorder(new SimpleTimelineAnalysisRecorder(latencyResultFullPrefix, serverFilter));
 
                 } catch (FileNotFoundException e) {
@@ -120,9 +124,10 @@ public class UpgradeLogParser {
                         if (matcher.find()) {
                             lineIndex++;
                             JsonNode log = objectMapper.readTree(matcher.group(1));
-                            Diagnostics diagnostics = objectMapper.convertValue(log, Diagnostics.class);
-                            diagnostics.setLogLine(matcher.group(1));
+                            Diagnostics cosmosDiagnosticsException = objectMapper.convertValue(log, Diagnostics.class);
 
+                            Diagnostics diagnostics = cosmosDiagnosticsException;
+                            diagnostics.setLogLine(matcher.group(1));
                             // For some exception, the pkRangeId may miss, backfill the info
                             String pkRangeId = DiagnosticsHelper.getPartitionKeyRangeId(diagnostics);
                             for (StoreResultWrapper storeResultWrapper: diagnostics.getResponseStatisticsList()) {
@@ -172,7 +177,7 @@ public class UpgradeLogParser {
             ));
             System.out.println("Exception count by category " + summaryRecorder.getErrors());
             System.out.println("High latency count by category " + summaryRecorder.getHighLatencyMap());
-            System.out.println("Transit timeout by server: " + summaryRecorder.getServerErrors());
+            //System.out.println("Transit timeout by server: " + summaryRecorder.getServerErrors());
 
             summaryRecorder.getPrintWriter().println();
             summaryRecorder.getPrintWriter().println();

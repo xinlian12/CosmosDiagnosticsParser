@@ -14,8 +14,9 @@ public class SinglePartitionMetricsValidator implements IDiagnosticsValidator {
         return diagnostics
                 .getResponseStatisticsList()
                 .stream().anyMatch(storeResultWrapper -> {
-                    return storeResultWrapper.getStoreResult().getPartitionKeyRangeId() != null
-                            && storeResultWrapper.getStoreResult().getPartitionKeyRangeId().equals(this.partitionKeyRangeId);
+                    return storeResultWrapper.getStoreResult().getStorePhysicalAddress().contains(partitionKeyRangeId);
+//                    return storeResultWrapper.getStoreResult().getPartitionKeyRangeId() != null
+//                            && storeResultWrapper.getStoreResult().getPartitionKeyRangeId().equals(this.partitionKeyRangeId);
                 });
     }
 }

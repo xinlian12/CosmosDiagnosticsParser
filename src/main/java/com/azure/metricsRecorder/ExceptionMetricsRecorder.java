@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -44,6 +45,8 @@ public class ExceptionMetricsRecorder implements IMetricsRecorder {
     private final List<String> connectionTimeoutExceptionLogs = new ArrayList<>();
     private final ConcurrentHashMap<String, Integer> errorsByServer = new ConcurrentHashMap<>();
 
+    private final Set<String> serverKey429 = ConcurrentHashMap.newKeySet();
+
     public ExceptionMetricsRecorder(String logFilePrefix) throws FileNotFoundException {
         String logFilePath = logFilePrefix + "Exceptions.csv";
 
@@ -54,12 +57,21 @@ public class ExceptionMetricsRecorder implements IMetricsRecorder {
     public void recordValue(Diagnostics diagnostics) {
         for (StoreResultWrapper storeResultWrapper : diagnostics.getResponseStatisticsList()) {
             String exceptionMessage = storeResultWrapper.getStoreResult().getExceptionMessage();
-            if (StringUtils.isNotEmpty(exceptionMessage)) {
+            int statusCode = storeResultWrapper.getStoreResult().getStatusCode();
+            int substatusCode = storeResultWrapper.getStoreResult().getSubStatusCode();
+
+            if (StringUtils.isNotEmpty(exceptionMessage) || statusCode > 400) {
                 ExceptionCategory errorCategory;
-                if (exceptionMessage.contains("ConnectTimeoutException")) {
+                if (StringUtils.isNotEmpty(exceptionMessage) && exceptionMessage.contains("ConnectTimeoutException")) {
                     errorCategory = CONNECTION_TIMEOUT_EXCEPTION;
-                } else if (exceptionMessage.contains("acquisition took longer than the configured maximum time")) {
+                    String serverKey = DiagnosticsHelper.getServerKey(storeResultWrapper);
+                    System.out.println("connectionTimeout:" + serverKey);
+                  //  System.out.println("ConnectionTimeout: " + diagnostics.getLogLine());
+                } else if (StringUtils.isNotEmpty(exceptionMessage) && exceptionMessage.contains("acquisition took longer than the configured maximum time")) {
                     errorCategory = ACQUISITION_TIMEOUT_EXCEPTION;
+
+                    String serverKey = DiagnosticsHelper.getServerKey(storeResultWrapper);
+                    System.out.println("acquisitionTimeout:" + serverKey);
                 } else if (
                         storeResultWrapper
                                 .getStoreResult()
@@ -69,14 +81,45 @@ public class ExceptionMetricsRecorder implements IMetricsRecorder {
                                 .findFirst()
                                 .get()
                                 .getStartTimeUTC() == null) {
+
+                    double transitTime =  storeResultWrapper
+                            .getStoreResult()
+                            .getTransportRequestTimeline()
+                            .stream()
+                            .filter(transportEvent -> transportEvent.getEventName().equals(TransportTimelineEventName.TRANSIT.getDescription()))
+                            .findFirst()
+                            .get()
+                            .getDurationInMilliSecs();
+
+                    String serverKey = DiagnosticsHelper.getServerKey(storeResultWrapper);
+                   // System.out.println("TransitTimeout:" + serverKey);
+
+
+//                    if (transitTime < 5000) {
+//                        System.out.println("Connection closed during transit: " + diagnostics.getLogLine());
+//                    }
                     errorCategory = ExceptionCategory.TRANSIT_TIMEOUT;
 
-                } else if (storeResultWrapper.getStoreResult().getStatusCode() == 410) {
+                } else if (statusCode == 410) {
                     errorCategory = ExceptionCategory.SERVER_410;
-                } else if (storeResultWrapper.getStoreResult().getStatusCode() == 429) {
+                } else if (statusCode == 429) {
                     errorCategory = ExceptionCategory.SERVER_429;
-
-                  //  System.out.println("Server 429:" + diagnostics.getLogLine());
+                    String serverKey = DiagnosticsHelper.getServerKey(storeResultWrapper);
+                    if (this.serverKey429.add(serverKey)) {
+                        System.out.println("Server 429:" + serverKey);
+                    }
+                } else if (statusCode == 404){
+                    errorCategory = ExceptionCategory.SERVER_404;
+                } else if (statusCode == 412) {
+                    errorCategory = ExceptionCategory.SERVER_412;
+                } else if (statusCode == 409) {
+                    errorCategory = ExceptionCategory.SERVER_409;
+                } else if (statusCode == 449) {
+                    errorCategory = ExceptionCategory.SERVER_449;
+                } else if (statusCode == 408 && substatusCode == 20008 ) {
+                    errorCategory = ExceptionCategory.REQUEST_CANCELLED;
+                } else if (statusCode == 408) {
+                    errorCategory = ExceptionCategory.SERVER_408;
                 } else {
                     throw new IllegalStateException("what kind exception is this: " + diagnostics.getLogLine());
                 }
@@ -92,9 +135,10 @@ public class ExceptionMetricsRecorder implements IMetricsRecorder {
 
                 if(errorCategory == TRANSIT_TIMEOUT || errorCategory == CONNECTION_TIMEOUT_EXCEPTION) {
                     String serverKey = DiagnosticsHelper.getServerKey(storeResultWrapper);
-                    this.errorsByServer.compute(serverKey, (key, count) -> {
+                    String partitionId = DiagnosticsHelper.getPartitionId(storeResultWrapper);
+                    this.errorsByServer.compute(partitionId, (key, count) -> {
                         if (count == null) {
-                            System.out.println(serverKey);
+                           // System.out.println("Transit timeout/connection timeout" + serverKey);
                             count = 0;
                         }
 
@@ -151,7 +195,7 @@ public class ExceptionMetricsRecorder implements IMetricsRecorder {
 
                                     count += 1;
 
-                                    System.out.println("Timeout when there is connected connection " + diagnostics.getLogLine());
+                             //       System.out.println("Timeout when there is connected connection " + diagnostics.getLogLine());
                                     return count;
                                 });
                             }
