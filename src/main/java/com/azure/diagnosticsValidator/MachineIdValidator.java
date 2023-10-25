@@ -11,6 +11,6 @@ public class MachineIdValidator implements IDiagnosticsValidator{
     }
     @Override
     public boolean validateDiagnostics(Diagnostics diagnostics) {
-        return diagnostics.getClientCfgs().getMachineId().equals(this.machineId);
+        return diagnostics.getClientCfgs().getMachineId().contains(this.machineId);
     }
 }

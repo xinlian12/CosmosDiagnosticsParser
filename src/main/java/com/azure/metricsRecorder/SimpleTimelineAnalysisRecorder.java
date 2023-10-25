@@ -135,11 +135,12 @@ public class SimpleTimelineAnalysisRecorder implements IMetricsRecorder {
                                 requestStartTime,
                                 requestEndTime,
                                 Arrays.asList(
-                                        "ChannelId: " + channelId,
-                                        "ChannelIdLastReadTime:" + lastChannelReadTime,
+                                      //  "ChannelId: " + channelId,
+                                      //  "ChannelIdLastReadTime:" + lastChannelReadTime,
                                         Duration.between(Instant.parse(requestStartTime), Instant.parse(requestEndTime)).toMillis(),
+                                        diagnostics.getRequestId(),
                                         diagnostics.getActivityId(),
-                                        storeResultWrapper.getStoreResult().getStatusCode() + ":" + storeResultWrapper.getStoreResult().getSubStatusCode(),
+                                       // storeResultWrapper.getStoreResult().getStatusCode() + ":" + storeResultWrapper.getStoreResult().getSubStatusCode(),
                                         "pkRangeId:" + partitionKeyRangeId,
                                         "Stage: " + stageName,
                                         "Stage duration: " + stageTime,
@@ -155,7 +156,8 @@ public class SimpleTimelineAnalysisRecorder implements IMetricsRecorder {
                                         diagnostics.getLogLine()
                                 ),
                                 exceptionCategory,
-                                diagnostics.getLogLine()));
+                                diagnostics.getLogLine(),
+                                diagnostics.getRequestId()));
             }
 
             channelsPerEndpoint.put(
@@ -265,7 +267,15 @@ public class SimpleTimelineAnalysisRecorder implements IMetricsRecorder {
                     .stream().sorted(new Comparator<ActionTimeline>() {
                         @Override
                         public int compare(ActionTimeline o1, ActionTimeline o2) {
-                            return Instant.parse(o1.getStartTime()).compareTo(Instant.parse(o2.getStartTime()));
+                            if (o1.getRequestId() != null) {
+                                if (o1.getRequestId().equals(o2.getRequestId())) {
+                                    return Instant.parse(o1.getStartTime()).compareTo(Instant.parse(o2.getStartTime()));
+                                } else {
+                                    return o1.getRequestId().compareTo(o2.getRequestId());
+                                }
+                            } else {
+                                return Instant.parse(o1.getStartTime()).compareTo(Instant.parse(o2.getStartTime()));
+                            }
                         }
                     }).collect(Collectors.toList());
 

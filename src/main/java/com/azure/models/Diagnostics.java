@@ -23,6 +23,7 @@ public class Diagnostics {
     private RetryContext retryContext;
     private ClientConfigurations clientCfgs;
     private SystemInformation systemInformation;
+    private String requestId;
 
     @JsonIgnore
     private String logLine;
@@ -173,5 +174,13 @@ public class Diagnostics {
 
     public void setSystemInformation(SystemInformation systemInformation) {
         this.systemInformation = systemInformation;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
+    public String getRequestId() {
+        return this.requestId;
     }
 }

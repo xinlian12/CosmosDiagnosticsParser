@@ -15,12 +15,15 @@ public class ActionTimeline {
     private ExceptionCategory exceptionCategory;
     private final String logLine;
 
-    public ActionTimeline(String eventName, String startTime, String endTime, List<Object> details, String logLine) {
+    private final String requestId;
+
+    public ActionTimeline(String eventName, String startTime, String endTime, List<Object> details, String logLine, String requestId) {
         this.eventName = eventName;
         this.startTime = startTime;
         this.endTime = endTime;
         this.details = details;
         this.logLine = logLine;
+        this.requestId = requestId;
     }
 
     public String getEventName() {
@@ -39,23 +42,23 @@ public class ActionTimeline {
         return details;
     }
 
-    public static ActionTimeline createNewRequestActionTimeline(String startTime, String endTime, List<Object> details, ExceptionCategory exceptionCategory, String logLine) {
-        ActionTimeline actionTimeline = new ActionTimeline(REQUEST_TIMESTAMP, startTime, endTime, details, logLine);
+    public static ActionTimeline createNewRequestActionTimeline(String startTime, String endTime, List<Object> details, ExceptionCategory exceptionCategory, String logLine, String requestId) {
+        ActionTimeline actionTimeline = new ActionTimeline(REQUEST_TIMESTAMP, startTime, endTime, details, logLine, requestId);
         actionTimeline.setExceptionCategory(exceptionCategory);
 
         return actionTimeline;
     }
 
-    public static ActionTimeline createConnectionStateListenerActTimeline(String startTime, String endTime, List<Object> details, String logLine) {
-        return new ActionTimeline(CONNECTION_STATE_LISTENER_ACT_TIMESTAMP, startTime, endTime, details, logLine);
+    public static ActionTimeline createConnectionStateListenerActTimeline(String startTime, String endTime, List<Object> details, String logLine, String requestId) {
+        return new ActionTimeline(CONNECTION_STATE_LISTENER_ACT_TIMESTAMP, startTime, endTime, details, logLine, requestId);
     }
 
-    public static ActionTimeline createConnectionStateListenerCalledTimeline(String startTime, String endTime, List<Object> details, String logLine) {
-        return new ActionTimeline(CONNECTION_STATE_LISTENER_CALLED_TIMESTAMP, startTime, endTime, details, logLine);
+    public static ActionTimeline createConnectionStateListenerCalledTimeline(String startTime, String endTime, List<Object> details, String logLine, String requestId) {
+        return new ActionTimeline(CONNECTION_STATE_LISTENER_CALLED_TIMESTAMP, startTime, endTime, details, logLine, requestId);
     }
 
-    public static ActionTimeline createAddressRefreshTimeline(String startTime, String endTime, List<Object> details, String logLine) {
-        return new ActionTimeline(ADDRESS_REFRESH, startTime, endTime, details, logLine);
+    public static ActionTimeline createAddressRefreshTimeline(String startTime, String endTime, List<Object> details, String logLine, String requestId) {
+        return new ActionTimeline(ADDRESS_REFRESH, startTime, endTime, details, logLine, requestId);
     }
 
     public ExceptionCategory getExceptionCategory() {
@@ -68,5 +71,9 @@ public class ActionTimeline {
 
     public String getLogLine() {
         return logLine;
+    }
+
+    public String getRequestId() {
+        return this.requestId;
     }
 }

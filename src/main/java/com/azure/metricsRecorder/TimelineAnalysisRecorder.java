@@ -76,7 +76,8 @@ public class TimelineAnalysisRecorder implements IMetricsRecorder{
                                     storeResultWrapper.getStoreResult().getStatusCode() + ":" + storeResultWrapper.getStoreResult().getSubStatusCode(),
                                     storeResultWrapper.getStoreResult().getStorePhysicalAddress()),
                             exceptionCategory,
-                            diagnostics.getLogLine()));
+                            diagnostics.getLogLine(),
+                            diagnostics.getRequestId()));
 
 
             if (storeResultWrapper.getStoreResult().getServiceEndpointStatistics().getCerMetrics() != null) {
@@ -92,7 +93,8 @@ public class TimelineAnalysisRecorder implements IMetricsRecorder{
                                         lastActionContextTimestamp,
                                         lastActionContextTimestamp,
                                         Arrays.asList(lastUpdateAddressesCount),
-                                        diagnostics.getLogLine()));
+                                        diagnostics.getLogLine(),
+                                        diagnostics.getRequestId()));
                     }
                 }
             }
@@ -111,7 +113,8 @@ public class TimelineAnalysisRecorder implements IMetricsRecorder{
                                         addressResolutionDiagnostics.isForceCollectionRoutingMapRefresh(),
                                         addressResolutionDiagnostics.isInflightRequest(),
                                         diagnostics.getActivityId()),
-                                diagnostics.getLogLine()
+                                diagnostics.getLogLine(),
+                                diagnostics.getRequestId()
                         ));
             }
         }

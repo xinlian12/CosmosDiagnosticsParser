@@ -93,7 +93,14 @@ public class DiagnosticsHandler implements AutoCloseable {
                 this.validDiagnostics.stream().sorted(new Comparator<Diagnostics>() {
                     @Override
                     public int compare(Diagnostics o1, Diagnostics o2) {
-                        return Instant.parse(o1.getRequestStartTimeUTC()).compareTo(Instant.parse(o2.getRequestStartTimeUTC()));
+                        if (o1.getRequestId() != null) {
+                            if (o1.getRequestId() == o2.getRequestId()) {
+                                return Instant.parse(o1.getRequestStartTimeUTC()).compareTo(Instant.parse(o2.getRequestStartTimeUTC()));
+                            }
+                            return o1.getRequestId().compareTo(o2.getRequestId());
+                        } else {
+                            return Instant.parse(o1.getRequestStartTimeUTC()).compareTo(Instant.parse(o2.getRequestStartTimeUTC()));
+                        }
                     }
                 })
                 .collect(Collectors.toList());

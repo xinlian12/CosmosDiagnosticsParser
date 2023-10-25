@@ -2,6 +2,7 @@ package com.azure;
 
 import com.azure.common.DiagnosticsHelper;
 import com.azure.cosmos.implementation.apachecommons.lang.StringUtils;
+import com.azure.diagnosticsValidator.MachineIdValidator;
 import com.azure.metricsRecorder.ExceptionMetricsRecorder;
 import com.azure.metricsRecorder.SimpleTimelineAnalysisRecorder;
 import com.azure.metricsRecorder.latency.AddressResolutionMetricsRecorder;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -34,8 +36,8 @@ public class MasterCardsReadManyLogParser {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static void main(String[] args) throws Exception {
-        String logSourceDirectory = "src/main/java/mastercards/50batch250tps_readmany.csv";
-        String latencyResultPrefix = "src/main/java/mastercards/parsingresult/1025-50batch/";
+        String logSourceDirectory = "src/main/java/mastercards/25batch500tps_readmany.csv";
+        String latencyResultPrefix = "src/main/java/mastercards/parsingresult/1025-25batch/";
 
         // Add or remove the transport event you want to analysis
         List<TransportTimelineEventName> trackingEvents = Arrays.asList(
@@ -49,8 +51,9 @@ public class MasterCardsReadManyLogParser {
         DiagnosticsHandler diagnosticsParser = new DiagnosticsHandler(Duration.ofMinutes(1), latencyResultPrefix, summaryRecorder);
 
         try {
+            String machineId = "vmId_8fe0219b-1ea5-4c68-b5bc-85d0df204fc0";
             // diagnosticsParser.registerMetricsValidator(new TransportEventDurationValidator());
-            //  diagnosticsParser.registerMetricsValidator(new MachineIdValidator(machineId));
+            diagnosticsParser.registerMetricsValidator(new MachineIdValidator(machineId));
             // diagnosticsParser.registerMetricsValidator(new SingleServerValidator(serverFilter));
             //  diagnosticsParser.registerMetricsValidator(new SinglePartitionMetricsValidator("1470"));
             //diagnosticsParser.registerMetricsValidator(new RequestLatencyValidator(5000, 300000));
@@ -104,6 +107,7 @@ public class MasterCardsReadManyLogParser {
                 String startString = "{\"userAgent\"";
                 String endString = "\"proactiveInit\":null}}";
 
+                String requestId = UUID.randomUUID().toString();
                 while (true) {
                     int userAgentStartIndex = line.indexOf(startString);
                     int proactiveIndex = line.indexOf(endString);
@@ -115,6 +119,7 @@ public class MasterCardsReadManyLogParser {
                             JsonNode log = objectMapper.readTree(singleDiagnostics);
                             diagnostics = objectMapper.convertValue(log, Diagnostics.class);
                             diagnostics.setLogLine(singleDiagnostics);
+                            diagnostics.setRequestId(requestId);
 
                             // For some exception, the pkRangeId may miss, backfill the info
                             String pkRangeId = DiagnosticsHelper.getPartitionKeyRangeId(diagnostics);

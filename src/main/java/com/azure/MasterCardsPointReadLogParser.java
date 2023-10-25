@@ -2,6 +2,7 @@ package com.azure;
 
 import com.azure.common.DiagnosticsHelper;
 import com.azure.cosmos.implementation.apachecommons.lang.StringUtils;
+import com.azure.diagnosticsValidator.MachineIdValidator;
 import com.azure.metricsRecorder.ExceptionMetricsRecorder;
 import com.azure.metricsRecorder.SimpleTimelineAnalysisRecorder;
 import com.azure.metricsRecorder.latency.AddressResolutionMetricsRecorder;
@@ -49,8 +50,9 @@ public class MasterCardsPointReadLogParser {
         DiagnosticsHandler diagnosticsParser = new DiagnosticsHandler(Duration.ofMinutes(1), latencyResultPrefix, summaryRecorder);
 
         try {
+            //String machineId = "vmId_8fe0219b-1ea5-4c68-b5bc-85d0df204fc0";
             // diagnosticsParser.registerMetricsValidator(new TransportEventDurationValidator());
-            //  diagnosticsParser.registerMetricsValidator(new MachineIdValidator(machineId));
+           // diagnosticsParser.registerMetricsValidator(new MachineIdValidator(machineId));
             // diagnosticsParser.registerMetricsValidator(new SingleServerValidator(serverFilter));
             //  diagnosticsParser.registerMetricsValidator(new SinglePartitionMetricsValidator("1470"));
             //diagnosticsParser.registerMetricsValidator(new RequestLatencyValidator(5000, 300000));
