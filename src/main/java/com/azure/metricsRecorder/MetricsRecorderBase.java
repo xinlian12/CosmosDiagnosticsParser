@@ -56,7 +56,7 @@ public abstract class MetricsRecorderBase implements IMetricsRecorder, AutoClose
     @Override
     public void recordValue(Diagnostics diagnostics) {
         List<Double> recordValues = this.getRecordValues(diagnostics);
-        String pkRangeId = diagnostics.getResponseStatisticsList().get(0).getStoreResult().getPartitionKeyRangeId();
+//        String pkRangeId = diagnostics.getResponseStatisticsList().get(0).getStoreResult().getPartitionKeyRangeId();
 
         try {
 //            this.getConcurrentDoubleHistogramMapByPkRangeId().compute(pkRangeId, (key, histogram) -> {

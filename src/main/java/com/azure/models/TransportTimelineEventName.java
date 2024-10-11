@@ -8,7 +8,12 @@ public enum TransportTimelineEventName {
     TRANSIT("transitTime"),
     DECODE("decodeTime"),
     RECEIVED("received"),
-    COMPLETED("completed");
+    COMPLETED("completed"),
+    CONNECTION_CREATED("connectionCreated"),
+    CONNECTION_ACQUIRED("connectionAcquired"),
+    CONNECTION_CONFIGURED("connectionConfigured"),
+    REQUEST_SENT("requestSent");
+
     private final String description;
 
     TransportTimelineEventName(String description) {

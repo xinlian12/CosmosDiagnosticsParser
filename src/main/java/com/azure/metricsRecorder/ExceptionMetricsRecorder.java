@@ -2,8 +2,10 @@ package com.azure.metricsRecorder;
 
 import com.azure.ISummaryRecorder;
 import com.azure.common.DiagnosticsHelper;
+import com.azure.cosmos.implementation.ClientSideRequestStatistics;
 import com.azure.models.Diagnostics;
 import com.azure.models.ExceptionCategory;
+import com.azure.models.GatewayStatistics;
 import com.azure.models.ServiceEndpointStatistics;
 import com.azure.models.StoreResultWrapper;
 import com.azure.models.TransportTimelineEventName;
@@ -34,6 +36,7 @@ public class ExceptionMetricsRecorder implements IMetricsRecorder {
 
     private final ConcurrentHashMap<ExceptionCategory, ConcurrentDoubleHistogram> errorsHistograms = new ConcurrentHashMap<>();
     private final PrintWriter printWriter;
+    private final boolean useGateway;
     private final ConcurrentHashMap<String, AtomicInteger> partitionWithErrorSet = new ConcurrentHashMap<>();
 
     private final ConcurrentHashMap<ExceptionCategory, AtomicInteger> errorCountsByCategory = new ConcurrentHashMap<>();
@@ -44,14 +47,24 @@ public class ExceptionMetricsRecorder implements IMetricsRecorder {
     private final List<String> connectionTimeoutExceptionLogs = new ArrayList<>();
     private final ConcurrentHashMap<String, Integer> errorsByServer = new ConcurrentHashMap<>();
 
-    public ExceptionMetricsRecorder(String logFilePrefix) throws FileNotFoundException {
+    public ExceptionMetricsRecorder(String logFilePrefix, boolean useGateway) throws FileNotFoundException {
         String logFilePath = logFilePrefix + "Exceptions.csv";
 
         this.printWriter = new PrintWriter(logFilePath);
+        this.useGateway = useGateway;
     }
+
 
     @Override
     public void recordValue(Diagnostics diagnostics) {
+        if (useGateway) {
+            recordValueForGateway(diagnostics);
+        }
+
+        recordValueForDirect(diagnostics);
+    }
+
+    public void recordValueForDirect(Diagnostics diagnostics) {
         for (StoreResultWrapper storeResultWrapper : diagnostics.getResponseStatisticsList()) {
             String exceptionMessage = storeResultWrapper.getStoreResult().getExceptionMessage();
             if (StringUtils.isNotEmpty(exceptionMessage)) {
@@ -198,6 +211,42 @@ public class ExceptionMetricsRecorder implements IMetricsRecorder {
             }
         }
     }
+
+    public void recordValueForGateway(Diagnostics diagnostics) {
+        for (GatewayStatistics gatewayStatistics : diagnostics.getGatewayStatisticsList()) {
+            ExceptionCategory errorCategory = ExceptionCategory.NONE;
+            if (gatewayStatistics.getStatusCode() == 429) {
+                errorCategory = ExceptionCategory.SERVER_429;
+            }
+
+
+                this.errorCountsByCategory.compute(errorCategory, (error, count) -> {
+                    if (count == null) {
+                        count = new AtomicInteger(0);
+                    }
+
+                    count.incrementAndGet();
+                    return count;
+                });
+                errorsHistograms.compute(errorCategory, (exception, histogram) -> {
+                    if (histogram == null) {
+                        histogram = new ConcurrentDoubleHistogram(METRICS_MAX, METRICS_PRECISION);
+                    }
+
+                    histogram.recordValue(1);
+//                    histogram.recordValue(
+//                            storeResultWrapper
+//                                    .getStoreResult()
+//                                    .getTransportRequestTimeline()
+//                                    .stream().filter(transportEvent -> transportEvent.getEventName().equals(TransportTimelineEventName.CHANNEL_ACQUISITION.getDescription()))
+//                                    .findFirst()
+//                                    .get()
+//                                    .getDurationInMilliSecs()
+//                    );
+                    return histogram;
+                });
+            }
+        }
 
     @Override
     public void recordHistogramSnapshot(Instant recordTimestamp) {

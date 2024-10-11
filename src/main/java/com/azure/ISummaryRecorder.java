@@ -52,6 +52,9 @@ public interface ISummaryRecorder {
     void recordConnectionTimeoutOnConnected(Map<String, Integer> countByServer);
     void recordConnectionTimeoutOnConnected0(Map<String, Integer> countByServer);
     void recordConnectionTimeoutOnOthers(Map<String, Integer> countByServer);
+    void recordConnectionAcquired(double latency);
+    void recordConnectionCreated(double latency);
+    void recordConnectionConfigured(double latency);
     ConcurrentHashMap<String, Integer> getConnectionTimeoutOnUnknown();
     ConcurrentHashMap<String, Integer> getConnectionTimeoutOnConnected();
     ConcurrentHashMap<String, Integer> getConnectionTimeoutOnConnected0();

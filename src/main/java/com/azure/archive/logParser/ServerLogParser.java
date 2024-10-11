@@ -73,10 +73,11 @@ public class ServerLogParser {
                         //  diagnosticsParser.registerMetricsRecorder(new InflightRequestsMetricsRecorder(latencyResultFullPrefix));
 
                         for (TransportTimelineEventName eventName : trackingEvents) {
-                            diagnosticsParser.registerMetricsRecorder(new TransportLatencyMetricsRecorder(eventName, latencyResultPrefix, summaryRecorder));
+                            diagnosticsParser.registerMetricsRecorder(
+                                new TransportLatencyMetricsRecorder(eventName, latencyResultPrefix, summaryRecorder, false));
                         }
 
-                        diagnosticsParser.registerMetricsRecorder(new ExceptionMetricsRecorder(latencyResultPrefix));
+                        diagnosticsParser.registerMetricsRecorder(new ExceptionMetricsRecorder(latencyResultPrefix, false));
 
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();

@@ -83,11 +83,12 @@ public class PartitionLogParser {
                         //  diagnosticsParser.registerMetricsRecorder(new InflightRequestsMetricsRecorder(latencyResultFullPrefix));
 
                         for (TransportTimelineEventName eventName : trackingEvents) {
-                            diagnosticsParser.registerMetricsRecorder(new TransportLatencyMetricsRecorder(eventName, latencyResultFullPrefix, summaryRecorder));
+                            diagnosticsParser.registerMetricsRecorder(
+                                new TransportLatencyMetricsRecorder(eventName, latencyResultFullPrefix, summaryRecorder, false));
                         }
 
                         diagnosticsParser.registerMetricsRecorder(new Retry410MetricsRecorder(latencyResultFullPrefix));
-                        diagnosticsParser.registerMetricsRecorder(new ExceptionMetricsRecorder(latencyResultFullPrefix));
+                        diagnosticsParser.registerMetricsRecorder(new ExceptionMetricsRecorder(latencyResultFullPrefix, false));
 
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();

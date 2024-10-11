@@ -19,10 +19,6 @@ public class ExceptionsValidator implements IDiagnosticsValidator {
                 return false;
             }
         }
-
-        if (exists410) {
-            System.out.println(diagnostics.getLogLine());
-        }
         return exists410;
     }
 }

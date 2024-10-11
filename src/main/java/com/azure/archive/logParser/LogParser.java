@@ -78,11 +78,12 @@ public class LogParser {
             //  diagnosticsParser.registerMetricsRecorder(new InflightRequestsMetricsRecorder(latencyResultFullPrefix));
 
             for (TransportTimelineEventName eventName : trackingEvents) {
-                diagnosticsParser.registerMetricsRecorder(new TransportLatencyMetricsRecorder(eventName, latencyResultFullPrefix, summaryRecorder));
+                diagnosticsParser.registerMetricsRecorder(
+                    new TransportLatencyMetricsRecorder(eventName, latencyResultFullPrefix, summaryRecorder, false));
             }
 
             diagnosticsParser.registerMetricsRecorder(new Retry410MetricsRecorder(latencyResultFullPrefix));
-            diagnosticsParser.registerMetricsRecorder(new ExceptionMetricsRecorder(latencyResultFullPrefix));
+            diagnosticsParser.registerMetricsRecorder(new ExceptionMetricsRecorder(latencyResultFullPrefix, false));
             diagnosticsParser.registerMetricsRecorder(new SimpleTimelineAnalysisRecorder(latencyResultFullPrefix));
 
         } catch (FileNotFoundException e) {

@@ -27,6 +27,9 @@ public class SummaryRecorder implements ISummaryRecorder{
     private final static String HIGH_ADDRESS_RESOLUTION = "Address_Resolution";
     private final static String HIGH_THROTTLE_BACKOFF_LATENCY = "Throttle_Backoff";
     private final static String HIGH_410_BACKOFF_LATENCY = "410_Backoff";
+    private final static String HIGH_CONNECTION_CREATED = "Connection_Created";
+    private final static String HIGH_CONNECTION_ACQUIRED = "Connection_Acquired";
+    private final static String HIGH_CONNECTION_CONFIGURED = "Connection_Configured";
 
     private final static String OTHERS = "Others";
 
@@ -359,6 +362,30 @@ public class SummaryRecorder implements ISummaryRecorder{
                 count += countByServer.get(serverKey);
                 return count;
             });
+        }
+    }
+
+    @Override
+    public void recordConnectionAcquired(double latency) {
+        if (this.currentHighLatencyValue < latency) {
+            this.currentHighLatencyValue = latency;
+            this.currentHighLatencyCategory = HIGH_CONNECTION_ACQUIRED;
+        }
+    }
+
+    @Override
+    public void recordConnectionCreated(double latency) {
+        if (this.currentHighLatencyValue < latency) {
+            this.currentHighLatencyValue = latency;
+            this.currentHighLatencyCategory = HIGH_CONNECTION_CREATED;
+        }
+    }
+
+    @Override
+    public void recordConnectionConfigured(double latency) {
+        if (this.currentHighLatencyValue < latency) {
+            this.currentHighLatencyValue = latency;
+            this.currentHighLatencyCategory = HIGH_CONNECTION_CONFIGURED;
         }
     }
 

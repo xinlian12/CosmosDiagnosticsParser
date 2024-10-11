@@ -1,5 +1,6 @@
 package com.azure.models;
 
+import com.azure.cosmos.implementation.ClientSideRequestStatistics;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -22,6 +23,7 @@ public class Diagnostics {
     private Map<String, AddressResolutionDiagnostics> addressResolutionStatistics;
     private Map<String, List<MetadataDiagnostic>> metadataDiagnosticsContext;
     private RetryContext retryContext;
+    private List<GatewayStatistics> gatewayStatisticsList;
 
     @JsonIgnore
     private String logLine;
@@ -156,5 +158,13 @@ public class Diagnostics {
 
     public void setRetryContext(RetryContext retryContext) {
         this.retryContext = retryContext;
+    }
+
+    public List<GatewayStatistics> getGatewayStatisticsList() {
+        return gatewayStatisticsList;
+    }
+
+    public void setGatewayStatisticsList(List<GatewayStatistics> gatewayStatisticsList) {
+        this.gatewayStatisticsList = gatewayStatisticsList;
     }
 }
