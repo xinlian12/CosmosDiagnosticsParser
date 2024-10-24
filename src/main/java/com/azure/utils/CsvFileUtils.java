@@ -63,7 +63,7 @@ public class CsvFileUtils {
             String pkRangeId) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(recordTime.toEpochMilli());
+        sb.append(recordTime);
         sb.append(',');
         sb.append(histogram.getTotalCount());
         sb.append(',');

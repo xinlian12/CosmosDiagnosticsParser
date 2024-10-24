@@ -6,6 +6,7 @@ import com.azure.diagnosticsValidator.ExceptionsValidator;
 import com.azure.diagnosticsValidator.RequestLatencyValidator;
 import com.azure.diagnosticsValidator.TransportEventDurationValidator;
 import com.azure.metricsRecorder.ExceptionMetricsRecorder;
+import com.azure.metricsRecorder.PlainLatencyRecorder;
 import com.azure.metricsRecorder.SimpleTimelineAnalysisRecorder;
 import com.azure.metricsRecorder.latency.AddressResolutionMetricsRecorder;
 import com.azure.metricsRecorder.latency.BackendLatencyMetricsRecorder;
@@ -48,8 +49,8 @@ public class UpgradeLogParserGateway {
 
         // Decide how many machines you want to analysis
         for (int i = 1; i <= 1; i++) {
-            String logSourceDirectory = String.format("src/main/java/upgrades/vm%s/cosmos_client_logs/cosmos_diagnostics/read", i);
-            String latencyResultPrefix = String.format("src/main/java/upgrades/parsingResult/vm%d/", i);
+            String logSourceDirectory = String.format("C:/Users/nakumars/computeData/computetestread-2024-10-02-06h19m51s/computetestread-vm%s-system-diagnostics/cosmos_client_logs/cosmos_diagnostics/read", i);
+            String latencyResultPrefix = String.format("C:/Users/nakumars/computeData/computetestread-2024-10-02-06h19m51s/parsingResult/read/vm%d/", i);
             System.out.println("Parsing log from directory: " + logSourceDirectory);
 
             File latencyResultDirectory = new File(latencyResultPrefix);
@@ -82,10 +83,12 @@ public class UpgradeLogParserGateway {
                 if (!directory.exists()) {
                     directory.mkdir();
                 }
-
+                PlainLatencyRecorder plainLatencyRecorder = new PlainLatencyRecorder(latencyResultPrefix);
                 try {
-                    diagnosticsParser.registerMetricsValidator(new RequestLatencyValidator(5000, 300000));
+
+                    diagnosticsParser.registerMetricsValidator(new RequestLatencyValidator(50, 300000));
                     diagnosticsParser.registerMetricsRecorder(new RequestLatencyMetricsRecorder(latencyResultFullPrefix));
+
 
                     for (TransportTimelineEventName eventName : trackingEvents) {
                         diagnosticsParser.registerMetricsRecorder(
@@ -129,6 +132,7 @@ public class UpgradeLogParserGateway {
                             // summaryRecorder.recordPartitionLog(diagnostics);
                             // summaryRecorder.recordServerLog(diagnostics);
                             diagnosticsParser.processDiagnostics(diagnostics);
+                            plainLatencyRecorder.processDiagnostics(diagnostics);
                         } else {
                             //logger.warn("Cannot find matching pattern {}", line);
                         }
