@@ -49,8 +49,8 @@ public class UpgradeLogParserGateway {
 
         // Decide how many machines you want to analysis
         for (int i = 1; i <= 1; i++) {
-            String logSourceDirectory = String.format("C:/Users/nakumars/computeData/computetestread-2024-10-02-06h19m51s/computetestread-vm%s-system-diagnostics/cosmos_client_logs/cosmos_diagnostics/read", i);
-            String latencyResultPrefix = String.format("C:/Users/nakumars/computeData/computetestread-2024-10-02-06h19m51s/parsingResult/read/vm%d/", i);
+            String logSourceDirectory = String.format("C:/Users/nakumars/computeData/computetestread-2024-11-14-03h21m03s/computetestread-vm%s-system-diagnostics/cosmos_client_logs/cosmos_diagnostics/read", i);
+            String latencyResultPrefix = String.format("C:/Users/nakumars/computeData/computetestread-2024-11-14-03h21m03s/parsingResult/read/vm%d/", i);
             System.out.println("Parsing log from directory: " + logSourceDirectory);
 
             File latencyResultDirectory = new File(latencyResultPrefix);
@@ -70,7 +70,7 @@ public class UpgradeLogParserGateway {
             PrintWriter summaryFileWriter = new PrintWriter(summaryFile);
             SummaryRecorder summaryRecorder = new SummaryRecorder(latencyResultPrefix);
             summaryRecorder.setPrintWriter(summaryFileWriter);
-
+            PlainLatencyRecorder plainLatencyRecorder = new PlainLatencyRecorder(latencyResultPrefix);
             for (String logFile : allLogFiles) {
                 DiagnosticsHandler diagnosticsParser = new DiagnosticsHandler(Duration.ofMinutes(1), latencyResultPrefix, summaryRecorder);
                 // create the directory for the result
@@ -83,7 +83,7 @@ public class UpgradeLogParserGateway {
                 if (!directory.exists()) {
                     directory.mkdir();
                 }
-                PlainLatencyRecorder plainLatencyRecorder = new PlainLatencyRecorder(latencyResultPrefix);
+
                 try {
 
                     diagnosticsParser.registerMetricsValidator(new RequestLatencyValidator(50, 300000));
@@ -152,7 +152,7 @@ public class UpgradeLogParserGateway {
                 summaryFileWriter.println();
                 summaryFileWriter.println();
                 summaryFileWriter.println("Flush result for " + logFile);
-                // send an ending signal
+                // send an ending signal:q
                 diagnosticsParser.flush();
                 diagnosticsParser.close();
             }
