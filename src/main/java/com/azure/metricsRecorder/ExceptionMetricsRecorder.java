@@ -133,7 +133,7 @@ public class ExceptionMetricsRecorder implements IMetricsRecorder {
 
                     if (storeResultWrapper.getStoreResult().getReplicaStatusList() != null
                     && storeResultWrapper.getStoreResult().getReplicaStatusList().size() > 0) {
-                        String replicaStatus = storeResultWrapper.getStoreResult().getReplicaStatusList().get(0);
+                        String replicaStatus = storeResultWrapper.getStoreResult().getReplicaStatusList().get("Attempting").get(0);
                         String serverKey = DiagnosticsHelper.getServerKey(storeResultWrapper);
                         if (replicaStatus.contains("Unknown")) {
                             this.connectionTimeoutOnUnknown.compute(serverKey, (key, count) -> {

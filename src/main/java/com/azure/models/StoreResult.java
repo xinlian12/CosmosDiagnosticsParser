@@ -3,6 +3,7 @@ package com.azure.models;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StoreResult {
@@ -26,7 +27,7 @@ public class StoreResult {
     private int channelTaskQueueSize;
     private ChannelAcquisitionContextEvent transportRequestChannelAcquisitionContext;
     private ServiceEndpointStatistics serviceEndpointStatistics;
-    private List<String> replicaStatusList;
+    private Map<String, List<String>> replicaStatusList; // Changed to Map to support new structure
 
     public StoreResult() {}
     public String getStorePhysicalAddress() {
@@ -177,11 +178,11 @@ public class StoreResult {
         return serviceEndpointStatistics;
     }
 
-    public List<String> getReplicaStatusList() {
+    public Map<String, List<String>> getReplicaStatusList() {
         return replicaStatusList;
     }
 
-    public void setReplicaStatusList(List<String> replicaStatusList) {
+    public void setReplicaStatusList(Map<String, List<String>> replicaStatusList) {
         this.replicaStatusList = replicaStatusList;
     }
 
@@ -193,4 +194,3 @@ public class StoreResult {
         this.exceptionResponseHeaders = exceptionResponseHeaders;
     }
 }
-

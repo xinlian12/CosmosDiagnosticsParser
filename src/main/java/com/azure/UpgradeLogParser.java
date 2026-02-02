@@ -44,9 +44,9 @@ public class UpgradeLogParser {
         Pattern pattern = Pattern.compile(matchingString, Pattern.CASE_INSENSITIVE);
 
         // Decide how many machines you want to analysis
-        for (int i = 1; i <= 1; i++) {
-            String logSourceDirectory = String.format("src/main/java/upgrades/LowPartition-167/VM%s/cosmos_client_logs/diagnostics/create", i);
-            String latencyResultPrefix = String.format("src/main/java/upgrades/parsingResult/vm%d/", i);
+        for (int i = 1; i <= 2; i++) {
+            String logSourceDirectory = String.format("C:/Users/nakumars/serviceNotification/nosf-servicenotificationsbenchmarkingwrite-2026-01-29-19h59m23s/servicenotificationsbenchmarkingwrite-vm%s-system-diagnostics/cosmos_client_logs/cosmos_diagnostics/create/", i);
+            String latencyResultPrefix = String.format("C:/Users/nakumars/serviceNotification/nosf-servicenotificationsbenchmarkingwrite-2026-01-29-19h59m23s/parsingResult/vm%d/", i);
             System.out.println("Parsing log from directory: " + logSourceDirectory);
 
             File latencyResultDirectory = new File(latencyResultPrefix);
@@ -81,10 +81,10 @@ public class UpgradeLogParser {
                 try {
                     String serverFilter = "rntbd://cdb-ms-prod-northcentralus1-be12.documents.azure.com:14072";
                     diagnosticsParser.registerMetricsValidator(new TransportEventDurationValidator());
-                    diagnosticsParser.registerMetricsValidator(new ExceptionsValidator());
+                  //  diagnosticsParser.registerMetricsValidator(new ExceptionsValidator());
                   //  diagnosticsParser.registerMetricsValidator(new SingleServerValidator(serverFilter));
                   //  diagnosticsParser.registerMetricsValidator(new SinglePartitionMetricsValidator("1470"));
-                    diagnosticsParser.registerMetricsValidator(new RequestLatencyValidator(5000, 300000));
+                    diagnosticsParser.registerMetricsValidator(new RequestLatencyValidator(50, 1000));
                     diagnosticsParser.registerMetricsRecorder(new RequestLatencyMetricsRecorder(latencyResultFullPrefix));
                     diagnosticsParser.registerMetricsRecorder(new BackendLatencyMetricsRecorder(latencyResultFullPrefix, summaryRecorder));
                     diagnosticsParser.registerMetricsRecorder(new AddressResolutionMetricsRecorder(latencyResultFullPrefix, summaryRecorder));
@@ -117,7 +117,6 @@ public class UpgradeLogParser {
 
                         Matcher matcher = pattern.matcher(line);
                         if (matcher.find()) {
-                            lineIndex++;
                             JsonNode log = objectMapper.readTree(matcher.group(1));
                             Diagnostics diagnostics = objectMapper.convertValue(log, Diagnostics.class);
                             diagnostics.setLogLine(matcher.group(1));
@@ -130,11 +129,13 @@ public class UpgradeLogParser {
                             // if you want to group the logs by partition or by server
                            // summaryRecorder.recordPartitionLog(diagnostics);
                            // summaryRecorder.recordServerLog(diagnostics);
+                            lineIndex++;
                             diagnosticsParser.processDiagnostics(diagnostics);
                         } else {
                             //logger.warn("Cannot find matching pattern {}", line);
                         }
                     }
+                    System.out.println("UpgradeLogParser.main lineIndex "+lineIndex);
                 } catch (FileNotFoundException ex) {
                     ex.printStackTrace();
                 } catch (IOException ex) {
