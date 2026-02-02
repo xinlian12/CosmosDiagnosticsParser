@@ -1,10 +1,8 @@
 package com.azure.metricsRecorder.latency;
 
 import com.azure.ISummaryRecorder;
-import com.azure.cosmos.implementation.MetadataDiagnosticsContext;
 import com.azure.models.AddressResolutionDiagnostics;
 import com.azure.models.Diagnostics;
-import jdk.jshell.Diag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
