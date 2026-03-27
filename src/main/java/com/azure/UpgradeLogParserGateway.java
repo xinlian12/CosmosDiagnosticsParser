@@ -43,19 +43,27 @@ public class UpgradeLogParserGateway {
     private static final Logger logger = LoggerFactory.getLogger(UpgradeLogParserGateway.class);
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+
     public static void main(String[] args) throws Exception {
         String matchingString = ".*WARN  site.ycsb.db.AzureCosmosClient \\[\\] -(.*)";
         Pattern pattern = Pattern.compile(matchingString, Pattern.CASE_INSENSITIVE);
 
         // Decide how many machines you want to analysis
-        for (int i = 1; i <= 1; i++) {
+        for (int i = 1; i <= 3; i++) {
             String logSourceDirectory = String.format("C:/Users/nakumars/computeData/computetestread-2024-11-14-03h21m03s/computetestread-vm%s-system-diagnostics/cosmos_client_logs/cosmos_diagnostics/read", i);
             String latencyResultPrefix = String.format("C:/Users/nakumars/computeData/computetestread-2024-11-14-03h21m03s/parsingResult/read/vm%d/", i);
             System.out.println("Parsing log from directory: " + logSourceDirectory);
 
             File latencyResultDirectory = new File(latencyResultPrefix);
             if (!latencyResultDirectory.exists()) {
-                latencyResultDirectory.mkdir();
+                boolean isDirCreated = latencyResultDirectory.mkdirs();
+                System.out.printf("\n\n%sDirectory %s creation %s\n%s",
+                        ANSI_GREEN,
+                        latencyResultDirectory.getAbsolutePath(),
+                        isDirCreated ? "successful" : "failed",
+                        ANSI_RESET);
             }
 
             // Add or remove the transport event you want to analysis
